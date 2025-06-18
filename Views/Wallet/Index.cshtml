@@ -1,0 +1,799 @@
+@model Wallet.Models.WalletBalance
+@{
+    ViewData["Title"] = "ELS-SALE Wallet System";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .wallet-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .wallet-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .wallet-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .wallet-header h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .balance-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+
+
+        .balance-amount {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .balance-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .wallet-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .action-btn.secondary:hover {
+            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.4);
+        }
+
+        .qr-payment-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .qr-code-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #666;
+            margin: 0 auto;
+        }
+
+        .payment-amount-input {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .amount-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .generate-qr-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .generate-qr-btn:hover {
+            background: #229954;
+        }
+
+        .transaction-history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .transaction-item:hover {
+            transform: translateX(5px);
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-type {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .transaction-date {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .transaction-amount.positive {
+            color: #27ae60;
+        }
+
+        .transaction-amount.negative {
+            color: #e74c3c;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .payment-method {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .payment-method.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .qr-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wallet-container">
+        <!-- Wallet Balance Card -->
+        <div class="wallet-card">
+            <div class="wallet-header">
+                <h2>💳 My Wallet</h2>
+                <p>ELS-SALE Digital Wallet</p>
+            </div>
+
+            <div class="balance-display">
+                <div class="balance-amount" id="walletBalance">@($"${Model.Balance:N2}")</div>
+                <div class="balance-label">Available Balance</div>
+            </div>
+
+            <div class="wallet-actions">
+                <button class="action-btn" onclick="openModal('addMoneyModal')">
+                    ➕ Add Money
+                </button>
+                <button class="action-btn secondary" onclick="openModal('paymentModal')">
+                    💸 Make Payment
+                </button>
+            </div>
+
+            <div class="transaction-history">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Recent Transactions</h3>
+                <div id="transactionList">
+                    <!-- Transactions will be loaded via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Payment Card -->
+        <div class="wallet-card">
+            <div class="wallet-header">
+                <h2>📱 QR Payment</h2>
+                <p>Generate QR Code for Payment</p>
+            </div>
+
+            <div class="qr-payment-section">
+                <h3 style="margin-bottom: 15px; color: #2c3e50;">Payment Amount</h3>
+                <div class="payment-amount-input">
+                    <input type="number" class="amount-input" id="paymentAmount" placeholder="Enter amount" min="0"
+                        step="0.01">
+                    <button class="generate-qr-btn" onclick="generateQRCode()">Generate QR</button>
+                </div>
+
+                <div class="qr-code-container" id="qrContainer" style="display: none;">
+                    <div class="qr-code" id="qrCode">
+                        QR Code will appear here
+                    </div>
+                </div>
+
+                <div class="qr-info" id="qrInfo" style="display: none;">
+                    <h4>📱 QR Code Instructions:</h4>
+                    <ul style="text-align: left; margin-top: 10px;">
+                        <li>Share this QR code with the customer</li>
+                        <li>Customer scans the code to make payment</li>
+                        <li>Payment will be processed automatically</li>
+                        <li>You'll receive notification when payment is complete</li>
+                    </ul>
+                    <div style="margin-top: 15px;">
+                        <strong>Payment ID:</strong> <span
+                            id="paymentId">PAY-@DateTime.Now.ToString("yyyyMMddHHmmss")</span><br>
+                        <strong>Amount:</strong> $<span id="qrAmount">0.00</span><br>
+                        <strong>Status:</strong> <span id="paymentStatus" style="color: #f39c12;">Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="action-btn" onclick="checkPaymentStatus()" style="width: 100%;">
+                    🔄 Check Payment Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Money Modal -->
+    <div class="modal" id="addMoneyModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('addMoneyModal')">×</button>
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Add Money to Wallet</h2>
+
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="addAmount" placeholder="Enter amount to add" min="1" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label>Payment Method</label>
+                <div class="payment-methods">
+                    <div class="payment-method" onclick="selectPaymentMethod(this, 'card')">
+                        💳 Card
+                    </div>
+                    <div class="payment-method" onclick="selectPaymentMethod(this, 'bank')">
+                        🏦 Bank
+                    </div>
+                    <div class="payment-method" onclick="selectPaymentMethod(this, 'paypal')">
+                        🔵 PayPal
+                    </div>
+                </div>
+            </div>
+
+            <button class="action-btn" onclick="addMoney()" style="width: 100%; margin-top: 20px;">
+                Add Money
+            </button>
+
+            <div id="addMoneyStatus" class="status-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('paymentModal')">×</button>
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Make Payment</h2>
+
+            <div class="form-group">
+                <label>Recipient</label>
+                <input type="text" id="recipientId" placeholder="Enter recipient ID or email">
+            </div>
+
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="number" id="paymentAmountModal" placeholder="Enter payment amount" min="0.01" step="0.01">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="paymentDescription" placeholder="Payment description (optional)">
+            </div>
+
+            <button class="action-btn" onclick="makePayment()" style="width: 100%; margin-top: 20px;">
+                Send Payment
+            </button>
+
+            <div id="paymentStatus" class="status-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript logic for ASP.NET MVC
+        let currentBalance = @Model.Balance;
+        let selectedPaymentMethod = null;
+        let currentPaymentId = null;
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Payment method selection
+        function selectPaymentMethod(element, method) {
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            selectedPaymentMethod = method;
+        }
+
+        // Load transactions
+        async function loadTransactions() {
+            try {
+                const response = await fetch('@Url.Action("GetTransactions", "Wallet")');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const transactions = await response.json();
+                const transactionList = document.getElementById('transactionList');
+                transactionList.innerHTML = '';
+
+                if (transactions && transactions.length > 0) {
+                    transactions.forEach(tx => {
+                        const amountClass = tx.amount > 0 ? 'positive' : 'negative';
+                        const date = new Date(tx.transactionDate);
+                        transactionList.innerHTML += `
+                            <div class="transaction-item">
+                                <div class="transaction-info">
+                                    <div class="transaction-type">${tx.transactionType}</div>
+                                    <div class="transaction-date">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+                                </div>
+                                <div class="transaction-amount ${amountClass}">${tx.amount > 0 ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    transactionList.innerHTML = '<div class="no-transactions">No transactions found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                document.getElementById('transactionList').innerHTML = '<div class="error-message">Error loading transactions</div>';
+            }
+        }
+
+        // Generate QR Code
+        async function generateQRCode() {
+            const amount = parseFloat(document.getElementById('paymentAmount').value);
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            currentPaymentId = 'PAY-' + Date.now();
+
+            const qrData = {
+                paymentId: currentPaymentId,
+                amount: amount,
+                merchantId: 'MERCHANT-123',
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch('@Url.Action("GenerateQR", "Wallet")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                    },
+                    body: JSON.stringify(qrData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('QR generation failed');
+                }
+
+                const result = await response.json();
+
+                document.getElementById('qrContainer').style.display = 'block';
+                document.getElementById('qrInfo').style.display = 'block';
+                document.getElementById('qrCode').innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; margin-bottom: 10px;">QR Code Generated</div>
+                        <div style="background: #000; width: 150px; height: 150px; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">
+                            ${result.paymentId}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('paymentId').textContent = result.paymentId;
+                document.getElementById('qrAmount').textContent = result.amount.toFixed(2);
+                document.getElementById('paymentStatus').textContent = 'Pending';
+                document.getElementById('paymentStatus').style.color = '#f39c12';
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                alert('Failed to generate QR code. Please try again.');
+            }
+        }
+
+        // Check payment status
+        async function checkPaymentStatus() {
+            if (!currentPaymentId) {
+                alert('No active payment to check');
+                return;
+            }
+
+            try {
+                const response = await fetch(`@Url.Action("CheckPaymentStatus", "Wallet")?paymentId=${encodeURIComponent(currentPaymentId)}`);
+                if (!response.ok) {
+                    throw new Error('Failed to check payment status');
+                }
+
+                const result = await response.json();
+
+                const statusElement = document.getElementById('paymentStatus');
+                if (result.status === 'Completed') {
+                    statusElement.textContent = 'Completed ✅';
+                    statusElement.style.color = '#27ae60';
+                    updateBalance(result.amount);
+                    loadTransactions();
+                } else if (result.status === 'Failed') {
+                    statusElement.textContent = 'Failed ❌';
+                    statusElement.style.color = '#e74c3c';
+                } else {
+                    statusElement.textContent = 'Pending ⏳';
+                    statusElement.style.color = '#f39c12';
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+                alert('Failed to check payment status. Please try again.');
+            }
+        }
+
+        // Add money to wallet
+        async function addMoney() {
+            const amount = parseFloat(document.getElementById('addAmount').value);
+
+            if (!amount || amount <= 0) {
+                showStatus('addMoneyStatus', 'Please enter a valid amount', 'error');
+                return;
+            }
+
+            if (!selectedPaymentMethod) {
+                showStatus('addMoneyStatus', 'Please select a payment method', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("AddMoney", "Wallet")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        paymentMethod: selectedPaymentMethod
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Add money failed');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('addMoneyStatus', `Successfully added $${amount.toFixed(2)} to your wallet!`, 'success');
+                    updateBalance(amount);
+                    loadTransactions();
+                    setTimeout(() => closeModal('addMoneyModal'), 2000);
+                } else {
+                    showStatus('addMoneyStatus', result.message || 'Failed to add money.', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding money:', error);
+                showStatus('addMoneyStatus', 'Network error. Please try again.', 'error');
+            }
+        }
+
+        // Make payment
+        async function makePayment() {
+            const recipient = document.getElementById('recipientId').value.trim();
+            const amount = parseFloat(document.getElementById('paymentAmountModal').value);
+            const description = document.getElementById('paymentDescription').value.trim();
+
+            if (!recipient || !amount || amount <= 0) {
+                showStatus('paymentStatus', 'Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (amount > currentBalance) {
+                showStatus('paymentStatus', 'Insufficient balance', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('@Url.Action("MakePayment", "Wallet")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                    },
+                    body: JSON.stringify({
+                        recipientId: recipient,
+                        amount: amount,
+                        description: description
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Payment failed');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('paymentStatus', `Payment of $${amount.toFixed(2)} sent successfully!`, 'success');
+                    updateBalance(-amount);
+                    loadTransactions();
+                    setTimeout(() => closeModal('paymentModal'), 2000);
+                } else {
+                    showStatus('paymentStatus', result.message || 'Payment failed.', 'error');
+                }
+            } catch (error) {
+                console.error('Error making payment:', error);
+                showStatus('paymentStatus', 'Network error. Please try again.', 'error');
+            }
+        }
+
+        // Utility functions
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.style.display = 'block';
+
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 5000);
+        }
+
+        function updateBalance(change) {
+            currentBalance += change;
+            document.getElementById('walletBalance').textContent = `$${currentBalance.toFixed(2)}`;
+        }
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Load transactions on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadTransactions();
+
+            // Add anti-forgery token to the page if not already present
+            if (document.getElementsByName('__RequestVerificationToken').length === 0) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = '@Html.AntiForgeryToken()';
+                document.body.appendChild(tokenInput);
+            }
+        });
+    </script>
+</body>
+
+</html>

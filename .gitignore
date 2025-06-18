@@ -1,0 +1,58 @@
+## Build artifacts
+bin/
+obj/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## VS Code settings
+.vscode/
+
+## Rider settings
+.idea/
+
+## ASP.NET & Entity Framework
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+## SQLite migrations (if applicable)
+Migrations/
+
+## Logs
+*.log
+logs/
+
+## Dotnet tools
+*.pdb
+*.cache/
+*.mdb
+*.pidb
+
+## Secret & Environment files
+*.env
+*.secrets
+appsettings.Development.json
+
+## Generated files
+wwwroot/lib/
+node_modules/
+
+## Others
+_ReSharper*/
+*.ncrunch*
+*.localhistory/
+*.DS_Store
+Thumbs.db
+
+# Ignore test result
+TestResults/
+coverage/
+
+# JetBrains Rider and VSCode cache
+.idea/
+.vscode/
