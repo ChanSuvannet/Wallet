@@ -78,12 +78,14 @@ namespace ElsSaleWallet.Controllers
         {
             try
             {
-                // Implement your add money logic here
-                return Ok(new { Message = "Money added successfully" });
+                // Validate UserId against token
+                var tokenUserId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
+                var wallet = await _walletService.AddMoneyAsync(request.UserId, request.Amount);
+                return Ok(new { Message = "Money added successfully", Wallet = wallet });
             }
             catch (Exception ex)
             {
-                return BadRequest(new DTOs.ErrorResponse // Now this works
+                return BadRequest(new DTOs.ErrorResponse
                 {
                     Message = "Failed to add money",
                     Details = ex.Message
@@ -97,8 +99,10 @@ namespace ElsSaleWallet.Controllers
         {
             try
             {
-                // Implement your send money logic here
-                return Ok(new { Message = "Payment request created successfully" });
+                // Validate SenderUserId against token
+                var tokenUserId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
+                var paymentRequest = await _walletService.SendMoneyAsync(request.SenderUserId, request.Recipientor, request.Amount, request.Description);
+                return Ok(new { Message = "Payment request created successfully", PaymentRequest = paymentRequest });
             }
             catch (Exception ex)
             {

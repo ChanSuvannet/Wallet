@@ -66,7 +66,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(pr => pr.Id);
 
             // Configure required fields
-            entity.Property(pr => pr.RecipientId)
+            entity.Property(pr => pr.Recipientor)
                   .IsRequired()
                   .HasMaxLength(255);
 
@@ -88,19 +88,23 @@ public class ApplicationDbContext : DbContext
     {
         // Seed wallet data
         modelBuilder.Entity<WalletBalance>().HasData(
-            new WalletBalance
-            {
-                Id = 1,
-                UserId = 1, // Kimsreng
-                Balance = 1234.56m
-            },
-            new WalletBalance
-            {
-                Id = 2,
-                UserId = 2, // User
-                Balance = 500.00m
-            }
-        );
+        new WalletBalance
+        {
+            Id = 1,
+            UserId = 1, // Kimsreng
+            Email = "kimsreng@gmail.com",
+            Name = "kimsreng",
+            Balance = 1234.56m
+        },
+        new WalletBalance
+        {
+            Id = 2,
+            UserId = 2, // User
+            Email = "admin2@gmail.com",
+            Name = "admin",
+            Balance = 500.00m
+        }
+    );
 
         // Seed transaction data
         modelBuilder.Entity<Transaction>().HasData(
@@ -130,7 +134,7 @@ public class ApplicationDbContext : DbContext
             {
                 Id = 1,
                 WalletId = 1,
-                RecipientId = "user123@example.com",
+                Recipientor = "net@gmail.com",
                 Amount = 100.00m,
                 Description = "Test Payment",
                 Status = "Pending",

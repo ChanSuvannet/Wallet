@@ -9,5 +9,8 @@ namespace ElsSaleWallet.Services
     {
         Task<WalletBalance> GetFullWalletDataAsync(int userId);
         Task<WalletBalance> CreateWalletAsync(int userId);
+
+        Task<WalletBalance> AddMoneyAsync(int userId, decimal amount);
+        Task<PaymentRequest> SendMoneyAsync(int senderUserId, string recipientIdentifier, decimal amount, string description);
     }
 }

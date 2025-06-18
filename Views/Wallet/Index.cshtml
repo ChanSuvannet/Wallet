@@ -6,7 +6,6 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,17 +16,10 @@
         .fade-in {
             animation: fadeIn 0.5s;
         }
-
         @* @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         } *@
-
         .loading {
             display: inline-block;
             width: 20px;
@@ -37,14 +29,12 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
         @* @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         } *@
     </style>
 </head>
-
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
@@ -70,14 +60,11 @@
                     </div>
                     <div class="text-4xl font-bold text-gray-900 mb-2" id="balance">Loading...</div>
                     <p class="text-gray-500">Available funds</p>
-
                     <div class="mt-6 grid grid-cols-2 gap-4">
-                        <button onclick="openModal('addMoneyModal')"
-                            class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        <button onclick="openModal('addMoneyModal')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
                             Add Money
                         </button>
-                        <button onclick="openModal('sendMoneyModal')"
-                            class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                        <button onclick="openModal('sendMoneyModal')" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
                             Send Money
                         </button>
                     </div>
@@ -117,35 +104,29 @@
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold">Add Money</h3>
-                <button onclick="closeModal('addMoneyModal')" class="text-gray-500 hover:text-gray-700 text-2xl">
-                    &times;
-                </button>
+                <button onclick="closeModal('addMoneyModal')" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
             </div>
             <div class="space-y-4">
                 <div>
                     <label class="block text-gray-700 mb-2">Amount</label>
-                    <input type="number" id="addAmount" step="0.01" min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="addAmount" step="0.01" min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2">Payment Method</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="selectPaymentMethod('card')"
-                            class="payment-method border rounded-lg p-3 hover:bg-gray-50">
+                        <button onclick="selectPaymentMethod('card')" class="payment-method border rounded-lg p-3 hover:bg-gray-50">
                             <div class="text-center">
                                 <div class="text-2xl mb-1">💳</div>
                                 <div class="text-sm">Card</div>
                             </div>
                         </button>
-                        <button onclick="selectPaymentMethod('bank')"
-                            class="payment-method border rounded-lg p-3 hover:bg-gray-50">
+                        <button onclick="selectPaymentMethod('bank')" class="payment-method border rounded-lg p-3 hover:bg-gray-50">
                             <div class="text-center">
                                 <div class="text-2xl mb-1">🏦</div>
                                 <div class="text-sm">Bank</div>
                             </div>
                         </button>
-                        <button onclick="selectPaymentMethod('paypal')"
-                            class="payment-method border rounded-lg p-3 hover:bg-gray-50">
+                        <button onclick="selectPaymentMethod('paypal')" class="payment-method border rounded-lg p-3 hover:bg-gray-50">
                             <div class="text-center">
                                 <div class="text-2xl mb-1">🔵</div>
                                 <div class="text-sm">PayPal</div>
@@ -153,8 +134,7 @@
                         </button>
                     </div>
                 </div>
-                <button onclick="addMoney()"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                <button onclick="addMoney()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
                     Add Money
                 </button>
             </div>
@@ -166,28 +146,22 @@
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold">Send Money</h3>
-                <button onclick="closeModal('sendMoneyModal')" class="text-gray-500 hover:text-gray-700 text-2xl">
-                    &times;
-                </button>
+                <button onclick="closeModal('sendMoneyModal')" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-gray-700 mb-2">Recipient</label>
-                    <input type="text" id="recipient" placeholder="email@example.com"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <label class="block text-gray-700 mb-2">Recipient (Email)</label>
+                    <input type="text" id="recipient" placeholder="email@example.com" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2">Amount</label>
-                    <input type="number" id="sendAmount" step="0.01" min="0"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="number" id="sendAmount" step="0.01" min="0" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2">Description (Optional)</label>
-                    <input type="text" id="description" placeholder="What's this for?"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="description" placeholder="What's this for?" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <button onclick="sendMoney()"
-                    class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                <button onclick="sendMoney()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
                     Send Money
                 </button>
             </div>
@@ -195,7 +169,7 @@
     </div>
 
     <script>
-        // Current wallet data
+        const BASE_URL = 'http://localhost:5253';
         let walletData = null;
         let currentUserId = @userId;
         let selectedPaymentMethod = null;
@@ -203,22 +177,26 @@
         // Fetch wallet data from API
         async function fetchWalletData(userId) {
             try {
-                const response = await fetch(`/wallet/${userId}`);
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error('Wallet not found for this user');
+                const token = localStorage.getItem('token');
+                @* if (!token) throw new Error('Please login to view wallet'); *@
+
+                const response = await fetch(`${BASE_URL}/wallet/${userId}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) throw new Error('Wallet not found for this user');
+                    if (response.status === 401) throw new Error('Unauthorized: Please login again');
                     throw new Error('Failed to fetch wallet data');
                 }
-                const data = await response.json();
 
-                // Handle the $values structure from System.Text.Json
-                if (data.transactions && data.transactions.$values) {
-                    data.transactions = data.transactions.$values;
-                }
-                if (data.paymentRequests && data.paymentRequests.$values) {
-                    data.paymentRequests = data.paymentRequests.$values;
-                }
+                const data = await response.json();
+                // Handle System.Text.Json $values for collections
+                if (data.transactions && data.transactions.$values) data.transactions = data.transactions.$values;
+                if (data.paymentRequests && data.paymentRequests.$values) data.paymentRequests = data.paymentRequests.$values;
 
                 return data;
             } catch (error) {
@@ -242,27 +220,14 @@
             }
         }
 
-        // Load wallet for specific user
-        async function loadWalletForUser() {
-            const userId = parseInt(document.getElementById('userIdInput').value);
-            if (!userId || userId <= 0) {
-                alert('Please enter a valid user ID');
-                return;
-            }
-            await loadWalletData(userId);
-        }
-
         // Refresh current data
         async function refreshData() {
             const refreshIcon = document.getElementById('refreshIcon');
             refreshIcon.style.animation = 'spin 1s linear infinite';
-
             try {
                 await loadWalletData(currentUserId);
             } finally {
-                setTimeout(() => {
-                    refreshIcon.style.animation = '';
-                }, 1000);
+                refreshIcon.style.animation = '';
             }
         }
 
@@ -273,14 +238,12 @@
                 <div class="text-center py-8 text-gray-500">
                     <div class="loading mx-auto mb-2"></div>
                     Loading transactions...
-                </div>
-            `;
+                </div>`;
             document.getElementById('paymentRequests').innerHTML = `
                 <div class="text-center py-8 text-gray-500">
                     <div class="loading mx-auto mb-2"></div>
                     Loading payment requests...
-                </div>
-            `;
+                </div>`;
         }
 
         // Show error state
@@ -290,25 +253,23 @@
                 <div class="text-center py-8 text-red-500">
                     <div class="text-2xl mb-2">⚠️</div>
                     ${message}
-                </div>
-            `;
+                </div>`;
             document.getElementById('paymentRequests').innerHTML = `
                 <div class="text-center py-8 text-red-500">
                     <div class="text-2xl mb-2">⚠️</div>
                     ${message}
-                </div>
-            `;
+                </div>`;
             document.getElementById('lastUpdated').textContent = 'Error';
         }
 
-        // Update UI with current wallet data
+        // Update UI with wallet data
         function updateUI() {
             if (!walletData) return;
 
             // Update balance
             document.getElementById('balance').textContent = `$${walletData.balance.toFixed(2)}`;
             document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
-            document.getElementById('currentUserId').textContent = currentUserId;
+            document.getElementById('currentUserId').textContent = currentUserId.toString();
 
             // Update transactions
             const transactionsContainer = document.getElementById('transactions');
@@ -317,14 +278,11 @@
                     <div class="flex justify-between items-center p-4 border-b hover:bg-gray-50 fade-in">
                         <div>
                             <div class="font-medium">${tx.type}</div>
-                            <div class="text-sm text-gray-500">${new Date(tx.date).toLocaleString()}</div>
+                            <div class="text-sm text-gray-500">${new Date(tx.createdAt).toLocaleString()}</div>
                         </div>
                         <div class="text-right">
                             <div class="${tx.amount > 0 ? 'text-green-600' : 'text-red-600'} font-medium">
                                 ${tx.amount > 0 ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}
-                            </div>
-                            <div class="text-xs ${tx.status === 'Completed' ? 'text-green-500' : 'text-yellow-500'}">
-                                ${tx.status}
                             </div>
                         </div>
                     </div>
@@ -333,8 +291,7 @@
                 transactionsContainer.innerHTML = `
                     <div class="text-center py-8 text-gray-500">
                         No transactions found
-                    </div>
-                `;
+                    </div>`;
             }
 
             // Update payment requests
@@ -344,8 +301,7 @@
                     <div class="flex justify-between items-center p-4 border-b hover:bg-gray-50 fade-in">
                         <div>
                             <div class="font-medium">Payment Request</div>
-                            <div class="text-sm text-gray-500">To: ${pr.recipientId}</div>
-                            <div class="text-sm text-gray-500">${pr.description || 'No description'}</div>
+                            <div class="text-sm text-gray-500">To: Wallet #${pr.recipientWalletId || 'Pending'}</div>
                             <div class="text-xs text-gray-400">${new Date(pr.createdAt).toLocaleString()}</div>
                         </div>
                         <div class="text-right">
@@ -360,8 +316,7 @@
                 paymentRequestsContainer.innerHTML = `
                     <div class="text-center py-8 text-gray-500">
                         No payment requests found
-                    </div>
-                `;
+                    </div>`;
             }
         }
 
@@ -372,26 +327,25 @@
 
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
-            // Reset form fields
             if (id === 'addMoneyModal') {
                 document.getElementById('addAmount').value = '';
                 selectedPaymentMethod = null;
-                document.querySelectorAll('.payment-method').forEach(el => {
-                    el.classList.remove('border-blue-500', 'bg-blue-50');
-                });
+                document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('border-blue-500', 'bg-blue-50'));
+            } else if (id === 'sendMoneyModal') {
+                document.getElementById('recipient').value = '';
+                document.getElementById('sendAmount').value = '';
+                document.getElementById('description').value = '';
             }
         }
 
         // Payment method selection
         function selectPaymentMethod(method) {
             selectedPaymentMethod = method;
-            document.querySelectorAll('.payment-method').forEach(el => {
-                el.classList.remove('border-blue-500', 'bg-blue-50');
-            });
+            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('border-blue-500', 'bg-blue-50'));
             event.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
         }
 
-        // Add money to wallet (simulation)
+        // Add money to wallet
         async function addMoney() {
             const amount = parseFloat(document.getElementById('addAmount').value);
             if (!amount || amount <= 0) {
@@ -404,19 +358,38 @@
             }
 
             try {
-                // Simulate API call - in real app, call your API here
-                alert(`Successfully added $${amount.toFixed(2)} to your wallet!`);
-                closeModal('addMoneyModal');
+                const token = localStorage.getItem('token');
+                @* if (!token) throw new Error('Please login to add money'); *@
 
-                // Refresh data to show updated balance
+                const response = await fetch(`${BASE_URL}/wallet/add-money`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        amount: amount,
+                        paymentMethod: "CreditCard"
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to add money');
+                }
+
+                const data = await response.json();
+                @* alert(data.message || `Successfully added $${amount.toFixed(2)} to your wallet!`); *@
+                closeModal('addMoneyModal');
                 await refreshData();
             } catch (error) {
                 console.error('Error adding money:', error);
-                alert('Failed to add money. Please try again.');
+                alert(error.message || 'Failed to add money. Please try again.');
             }
         }
 
-        // Send money (simulation)
+        // Send money
         async function sendMoney() {
             const recipient = document.getElementById('recipient').value;
             const amount = parseFloat(document.getElementById('sendAmount').value);
@@ -432,33 +405,57 @@
             }
 
             try {
-                // Simulate API call
-                alert(`Payment request sent to ${recipient} for $${amount.toFixed(2)}`);
-                closeModal('sendMoneyModal');
+                const token = localStorage.getItem('token');
+                @* if (!token) throw new Error('Please login to send money'); *@
 
-                // Refresh data
+                const response = await fetch(`${BASE_URL}/wallet/send-money`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        senderUserId: currentUserId,
+                        Recipientor: recipient,
+                        amount: amount,
+                        description: description
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to send money');
+                }
+
+                const data = await response.json();
+                alert(data.message || `Payment request sent to ${recipient} for $${amount.toFixed(2)}`);
+                closeModal('sendMoneyModal');
                 await refreshData();
             } catch (error) {
                 console.error('Error sending money:', error);
-                alert('Failed to send money. Please try again.');
+                alert(error.message || 'Failed to send money. Please try again.');
             }
         }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in
+            const token = localStorage.getItem('token');
+            @* if (!token) {
+                alert('Please login to view your wallet');
+                window.location.href = '/login'; // Redirect to login page
+                return;
+            } *@
             loadWalletData(currentUserId);
 
             // Close modal when clicking outside
             document.addEventListener('click', (e) => {
                 if (e.target.classList.contains('fixed')) {
                     const modalId = e.target.id;
-                    if (modalId.includes('Modal')) {
-                        closeModal(modalId);
-                    }
+                    if (modalId.includes('Modal')) closeModal(modalId);
                 }
             });
         });
     </script>
 </body>
-
 </html>
