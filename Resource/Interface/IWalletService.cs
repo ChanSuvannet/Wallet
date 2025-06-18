@@ -8,5 +8,6 @@ namespace ElsSaleWallet.Services
     public interface IWalletService
     {
         Task<WalletBalance> GetFullWalletDataAsync(int userId);
+        Task<WalletBalance> CreateWalletAsync(int userId);
     }
 }

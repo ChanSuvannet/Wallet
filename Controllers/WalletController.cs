@@ -4,6 +4,7 @@ using ElsSaleWallet.Services;
 using System.Threading.Tasks;
 using DTOs = Wallet.DTOs;
 using Models = Wallet.Models;
+using System.ComponentModel.DataAnnotations;
 namespace ElsSaleWallet.Controllers
 {
     [Route("[controller]")]
@@ -16,6 +17,22 @@ namespace ElsSaleWallet.Controllers
         {
             _walletService = walletService;
         }
+
+        // GET: /wallet/check/{userId}
+        [HttpGet("check/{userId}")]
+        public async Task<IActionResult> CheckWalletExists(int userId)
+        {
+            try
+            {
+                var wallet = await _walletService.GetFullWalletDataAsync(userId);
+                return Ok(new { exists = true }); // Wallet exists
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { exists = false }); // Wallet not found
+            }
+        }
+
 
         // GET: /wallet/page
         [HttpGet("page/{userId}")]
@@ -37,6 +54,21 @@ namespace ElsSaleWallet.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+        }
+
+        // POST: /wallet/create/{userId}
+        [HttpPost("create/{userId}")]
+        public async Task<IActionResult> CreateWallet([Required] int userId)
+        {
+            try
+            {
+                var wallet = await _walletService.CreateWalletAsync(userId);
+                return Ok(wallet);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 

@@ -43,5 +43,28 @@ namespace ElsSaleWallet.Services
             }
         }
 
+        public async Task<WalletBalance> CreateWalletAsync(int userId)
+        {
+            // Check if wallet already exists
+            if (await _context.Wallets.AnyAsync(w => w.UserId == userId))
+            {
+                throw new InvalidOperationException("Wallet already exists for user");
+            }
+
+            // Create new WalletBalance instance
+            var wallet = new WalletBalance
+            {
+                UserId = userId,
+                Balance = 0m, // Use decimal (0m) for Balance
+                Transactions = new List<Transaction>(), // Initialized by model
+                PaymentRequests = new List<PaymentRequest>() // Initialized by model
+            };
+
+            _context.Wallets.Add(wallet);
+            await _context.SaveChangesAsync();
+
+            return wallet;
+        }
+
     }
 }
