@@ -2,35 +2,91 @@ namespace RazorWithSQLiteApp.Data;
 
 using Microsoft.EntityFrameworkCore;
 using Wallet.Models;
-
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
-
     public DbSet<WalletBalance> Wallets { get; set; }
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<PaymentRequest> PaymentRequests { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Configure relationships
-        modelBuilder.Entity<Transaction>()
-            .HasOne(t => t.Wallet)
-            .WithMany(w => w.Transactions)
-            .HasForeignKey(t => t.WalletId);
+        base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<PaymentRequest>()
-            .HasOne(pr => pr.Wallet)
-            .WithMany(w => w.PaymentRequests)
-            .HasForeignKey(pr => pr.WalletId);
+        // Configure WalletBalance entity
+        modelBuilder.Entity<WalletBalance>(entity =>
+        {
+            // Set primary key
+            entity.HasKey(w => w.Id);
 
-        modelBuilder.Entity<WalletBalance>()
-                    .HasIndex(w => w.UserId)
-                    .IsUnique(); // Ensure one wallet per user
-        // Seed data
+            // Configure one-to-many relationship with Transactions
+            entity.HasMany(w => w.Transactions)
+                  .WithOne(t => t.Wallet)
+                  .HasForeignKey(t => t.WalletId)
+                  .OnDelete(DeleteBehavior.Cascade); // Delete transactions when wallet is deleted
+
+            // Configure one-to-many relationship with PaymentRequests
+            entity.HasMany(w => w.PaymentRequests)
+                  .WithOne(pr => pr.Wallet)
+                  .HasForeignKey(pr => pr.WalletId)
+                  .OnDelete(DeleteBehavior.Cascade); // Delete payment requests when wallet is deleted
+
+            // Ensure each user has only one wallet
+            entity.HasIndex(w => w.UserId)
+                  .IsUnique();
+
+            // Configure decimal precision for Balance
+            entity.Property(w => w.Balance)
+                  .HasColumnType("decimal(18,2)");
+        });
+
+        // Configure Transaction entity
+        modelBuilder.Entity<Transaction>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+
+            // Configure required fields
+            entity.Property(t => t.Type)
+                  .IsRequired()
+                  .HasMaxLength(100);
+
+            entity.Property(t => t.Status)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(t => t.Amount)
+                  .HasColumnType("decimal(18,2)");
+        });
+
+        // Configure PaymentRequest entity
+        modelBuilder.Entity<PaymentRequest>(entity =>
+        {
+            entity.HasKey(pr => pr.Id);
+
+            // Configure required fields
+            entity.Property(pr => pr.RecipientId)
+                  .IsRequired()
+                  .HasMaxLength(255);
+
+            entity.Property(pr => pr.Status)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(pr => pr.Amount)
+                  .HasColumnType("decimal(18,2)");
+
+            entity.Property(pr => pr.Description)
+                  .HasMaxLength(500);
+        });
+
+        // Seed initial data
+        SeedData(modelBuilder);
+    }
+    private void SeedData(ModelBuilder modelBuilder)
+    {
+        // Seed wallet data
         modelBuilder.Entity<WalletBalance>().HasData(
             new WalletBalance
             {
@@ -46,6 +102,7 @@ public class ApplicationDbContext : DbContext
             }
         );
 
+        // Seed transaction data
         modelBuilder.Entity<Transaction>().HasData(
             new Transaction
             {
@@ -67,6 +124,7 @@ public class ApplicationDbContext : DbContext
             }
         );
 
+        // Seed payment request data
         modelBuilder.Entity<PaymentRequest>().HasData(
             new PaymentRequest
             {
@@ -79,7 +137,5 @@ public class ApplicationDbContext : DbContext
                 CreatedAt = new DateTime(2025, 6, 17, 11, 0, 0)
             }
         );
-
-        base.OnModelCreating(modelBuilder);
     }
 }

@@ -1,6 +1,7 @@
 @model Wallet.Models.WalletBalance
 @{
-    ViewData["Title"] = "ELS-SALE Wallet System";
+    ViewData["Title"] = "My Wallet";
+    var userId = ViewBag.UserId ?? 1; // Default to user ID 1 if not provided
 }
 
 <!DOCTYPE html>
@@ -10,788 +11,452 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .fade-in {
+            animation: fadeIn 0.5s;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+        @* @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
 
-        .wallet-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
+            to {
+                opacity: 1;
+            }
+        } *@
 
-        .wallet-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .wallet-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-        }
-
-        .wallet-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .wallet-header h2 {
-            color: #2c3e50;
-            font-size: 1.8em;
-            margin-bottom: 10px;
-        }
-
-        .balance-display {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .balance-display::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-        }
-
-
-
-        .balance-amount {
-            font-size: 3em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .balance-label {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .wallet-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .action-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .action-btn.secondary {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-        }
-
-        .action-btn.secondary:hover {
-            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.4);
-        }
-
-        .qr-payment-section {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .qr-code-container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
+        .loading {
             display: inline-block;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .qr-code {
-            width: 200px;
-            height: 200px;
-            background: #f0f0f0;
-            border: 2px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #666;
-            margin: 0 auto;
-        }
-
-        .payment-amount-input {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
-        .amount-input {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1.1em;
-            transition: border-color 0.3s ease;
-        }
-
-        .amount-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .generate-qr-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .generate-qr-btn:hover {
-            background: #229954;
-        }
-
-        .transaction-history {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            transition: transform 0.2s ease;
-        }
-
-        .transaction-item:hover {
-            transform: translateX(5px);
-        }
-
-        .transaction-info {
-            flex: 1;
-        }
-
-        .transaction-type {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .transaction-date {
-            font-size: 0.9em;
-            color: #7f8c8d;
-        }
-
-        .transaction-amount {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-
-        .transaction-amount.positive {
-            color: #27ae60;
-        }
-
-        .transaction-amount.negative {
-            color: #e74c3c;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 500px;
-            width: 90%;
-            position: relative;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .payment-methods {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .payment-method {
-            background: #f8f9fa;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .payment-method:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-        }
-
-        .payment-method.selected {
-            border-color: #667eea;
-            background: #667eea;
-            color: white;
-        }
-
-        .status-message {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .status-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .qr-info {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border-left: 4px solid #2196f3;
-        }
+        @* @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        } *@
     </style>
 </head>
 
-<body>
-    <div class="wallet-container">
-        <!-- Wallet Balance Card -->
-        <div class="wallet-card">
-            <div class="wallet-header">
-                <h2>💳 My Wallet</h2>
-                <p>ELS-SALE Digital Wallet</p>
-            </div>
-
-            <div class="balance-display">
-                <div class="balance-amount" id="walletBalance">@($"${Model.Balance:N2}")</div>
-                <div class="balance-label">Available Balance</div>
-            </div>
-
-            <div class="wallet-actions">
-                <button class="action-btn" onclick="openModal('addMoneyModal')">
-                    ➕ Add Money
-                </button>
-                <button class="action-btn secondary" onclick="openModal('paymentModal')">
-                    💸 Make Payment
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">My Wallet</h1>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-500">User ID: <span id="currentUserId">@userId</span></div>
+                <div class="text-sm text-gray-500">Last updated: <span id="lastUpdated">Loading...</span></div>
+                <button onclick="refreshData()" class="text-blue-600 hover:text-blue-800">
+                    <span id="refreshIcon">🔄</span> Refresh
                 </button>
             </div>
+        </div>
 
-            <div class="transaction-history">
-                <h3 style="margin-bottom: 20px; color: #2c3e50;">Recent Transactions</h3>
-                <div id="transactionList">
-                    <!-- Transactions will be loaded via JavaScript -->
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Balance Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-1">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-700">Balance</h2>
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Active</span>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-900 mb-2" id="balance">Loading...</div>
+                    <p class="text-gray-500">Available funds</p>
+
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <button onclick="openModal('addMoneyModal')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                            Add Money
+                        </button>
+                        <button onclick="openModal('sendMoneyModal')"
+                            class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                            Send Money
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-2">
+                <div class="p-6">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Recent Transactions</h2>
+                    <div id="transactions" class="space-y-4">
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="loading mx-auto mb-2"></div>
+                            Loading transactions...
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- QR Payment Card -->
-        <div class="wallet-card">
-            <div class="wallet-header">
-                <h2>📱 QR Payment</h2>
-                <p>Generate QR Code for Payment</p>
-            </div>
-
-            <div class="qr-payment-section">
-                <h3 style="margin-bottom: 15px; color: #2c3e50;">Payment Amount</h3>
-                <div class="payment-amount-input">
-                    <input type="number" class="amount-input" id="paymentAmount" placeholder="Enter amount" min="0"
-                        step="0.01">
-                    <button class="generate-qr-btn" onclick="generateQRCode()">Generate QR</button>
-                </div>
-
-                <div class="qr-code-container" id="qrContainer" style="display: none;">
-                    <div class="qr-code" id="qrCode">
-                        QR Code will appear here
+        <!-- Payment Requests Section -->
+        <div class="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Payment Requests</h2>
+                <div id="paymentRequests" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <div class="loading mx-auto mb-2"></div>
+                        Loading payment requests...
                     </div>
                 </div>
-
-                <div class="qr-info" id="qrInfo" style="display: none;">
-                    <h4>📱 QR Code Instructions:</h4>
-                    <ul style="text-align: left; margin-top: 10px;">
-                        <li>Share this QR code with the customer</li>
-                        <li>Customer scans the code to make payment</li>
-                        <li>Payment will be processed automatically</li>
-                        <li>You'll receive notification when payment is complete</li>
-                    </ul>
-                    <div style="margin-top: 15px;">
-                        <strong>Payment ID:</strong> <span
-                            id="paymentId">PAY-@DateTime.Now.ToString("yyyyMMddHHmmss")</span><br>
-                        <strong>Amount:</strong> $<span id="qrAmount">0.00</span><br>
-                        <strong>Status:</strong> <span id="paymentStatus" style="color: #f39c12;">Pending</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="action-btn" onclick="checkPaymentStatus()" style="width: 100%;">
-                    🔄 Check Payment Status
-                </button>
             </div>
         </div>
     </div>
 
     <!-- Add Money Modal -->
-    <div class="modal" id="addMoneyModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal('addMoneyModal')">×</button>
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">Add Money to Wallet</h2>
-
-            <div class="form-group">
-                <label>Amount</label>
-                <input type="number" id="addAmount" placeholder="Enter amount to add" min="1" step="0.01">
+    <div id="addMoneyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Add Money</h3>
+                <button onclick="closeModal('addMoneyModal')" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    &times;
+                </button>
             </div>
-
-            <div class="form-group">
-                <label>Payment Method</label>
-                <div class="payment-methods">
-                    <div class="payment-method" onclick="selectPaymentMethod(this, 'card')">
-                        💳 Card
-                    </div>
-                    <div class="payment-method" onclick="selectPaymentMethod(this, 'bank')">
-                        🏦 Bank
-                    </div>
-                    <div class="payment-method" onclick="selectPaymentMethod(this, 'paypal')">
-                        🔵 PayPal
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">Amount</label>
+                    <input type="number" id="addAmount" step="0.01" min="0"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Payment Method</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="selectPaymentMethod('card')"
+                            class="payment-method border rounded-lg p-3 hover:bg-gray-50">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">💳</div>
+                                <div class="text-sm">Card</div>
+                            </div>
+                        </button>
+                        <button onclick="selectPaymentMethod('bank')"
+                            class="payment-method border rounded-lg p-3 hover:bg-gray-50">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">🏦</div>
+                                <div class="text-sm">Bank</div>
+                            </div>
+                        </button>
+                        <button onclick="selectPaymentMethod('paypal')"
+                            class="payment-method border rounded-lg p-3 hover:bg-gray-50">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">🔵</div>
+                                <div class="text-sm">PayPal</div>
+                            </div>
+                        </button>
                     </div>
                 </div>
+                <button onclick="addMoney()"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
+                    Add Money
+                </button>
             </div>
-
-            <button class="action-btn" onclick="addMoney()" style="width: 100%; margin-top: 20px;">
-                Add Money
-            </button>
-
-            <div id="addMoneyStatus" class="status-message" style="display: none;"></div>
         </div>
     </div>
 
-    <!-- Payment Modal -->
-    <div class="modal" id="paymentModal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal('paymentModal')">×</button>
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">Make Payment</h2>
-
-            <div class="form-group">
-                <label>Recipient</label>
-                <input type="text" id="recipientId" placeholder="Enter recipient ID or email">
+    <!-- Send Money Modal -->
+    <div id="sendMoneyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Send Money</h3>
+                <button onclick="closeModal('sendMoneyModal')" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    &times;
+                </button>
             </div>
-
-            <div class="form-group">
-                <label>Amount</label>
-                <input type="number" id="paymentAmountModal" placeholder="Enter payment amount" min="0.01" step="0.01">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">Recipient</label>
+                    <input type="text" id="recipient" placeholder="email@example.com"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Amount</label>
+                    <input type="number" id="sendAmount" step="0.01" min="0"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Description (Optional)</label>
+                    <input type="text" id="description" placeholder="What's this for?"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button onclick="sendMoney()"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+                    Send Money
+                </button>
             </div>
-
-            <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="paymentDescription" placeholder="Payment description (optional)">
-            </div>
-
-            <button class="action-btn" onclick="makePayment()" style="width: 100%; margin-top: 20px;">
-                Send Payment
-            </button>
-
-            <div id="paymentStatus" class="status-message" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        // JavaScript logic for ASP.NET MVC
-        let currentBalance = @Model.Balance;
+        // Current wallet data
+        let walletData = null;
+        let currentUserId = @userId;
         let selectedPaymentMethod = null;
-        let currentPaymentId = null;
 
-        // Modal functions
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        // Payment method selection
-        function selectPaymentMethod(element, method) {
-            document.querySelectorAll('.payment-method').forEach(el => {
-                el.classList.remove('selected');
-            });
-            element.classList.add('selected');
-            selectedPaymentMethod = method;
-        }
-
-        // Load transactions
-        async function loadTransactions() {
+        // Fetch wallet data from API
+        async function fetchWalletData(userId) {
             try {
-                const response = await fetch('@Url.Action("GetTransactions", "Wallet")');
+                const response = await fetch(`/wallet/${userId}`);
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    if (response.status === 404) {
+                        throw new Error('Wallet not found for this user');
+                    }
+                    throw new Error('Failed to fetch wallet data');
                 }
-                const transactions = await response.json();
-                const transactionList = document.getElementById('transactionList');
-                transactionList.innerHTML = '';
+                const data = await response.json();
 
-                if (transactions && transactions.length > 0) {
-                    transactions.forEach(tx => {
-                        const amountClass = tx.amount > 0 ? 'positive' : 'negative';
-                        const date = new Date(tx.transactionDate);
-                        transactionList.innerHTML += `
-                            <div class="transaction-item">
-                                <div class="transaction-info">
-                                    <div class="transaction-type">${tx.transactionType}</div>
-                                    <div class="transaction-date">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
-                                </div>
-                                <div class="transaction-amount ${amountClass}">${tx.amount > 0 ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}</div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    transactionList.innerHTML = '<div class="no-transactions">No transactions found</div>';
+                // Handle the $values structure from System.Text.Json
+                if (data.transactions && data.transactions.$values) {
+                    data.transactions = data.transactions.$values;
                 }
+                if (data.paymentRequests && data.paymentRequests.$values) {
+                    data.paymentRequests = data.paymentRequests.$values;
+                }
+
+                return data;
             } catch (error) {
-                console.error('Error loading transactions:', error);
-                document.getElementById('transactionList').innerHTML = '<div class="error-message">Error loading transactions</div>';
+                console.error('Error fetching wallet data:', error);
+                throw error;
             }
         }
 
-        // Generate QR Code
-        async function generateQRCode() {
-            const amount = parseFloat(document.getElementById('paymentAmount').value);
+        // Load and display wallet data
+        async function loadWalletData(userId) {
+            try {
+                showLoading();
+                const data = await fetchWalletData(userId);
+                if (data) {
+                    walletData = data;
+                    currentUserId = userId;
+                    updateUI();
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        }
 
+        // Load wallet for specific user
+        async function loadWalletForUser() {
+            const userId = parseInt(document.getElementById('userIdInput').value);
+            if (!userId || userId <= 0) {
+                alert('Please enter a valid user ID');
+                return;
+            }
+            await loadWalletData(userId);
+        }
+
+        // Refresh current data
+        async function refreshData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.style.animation = 'spin 1s linear infinite';
+
+            try {
+                await loadWalletData(currentUserId);
+            } finally {
+                setTimeout(() => {
+                    refreshIcon.style.animation = '';
+                }, 1000);
+            }
+        }
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('balance').innerHTML = '<div class="loading"></div>';
+            document.getElementById('transactions').innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <div class="loading mx-auto mb-2"></div>
+                    Loading transactions...
+                </div>
+            `;
+            document.getElementById('paymentRequests').innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <div class="loading mx-auto mb-2"></div>
+                    Loading payment requests...
+                </div>
+            `;
+        }
+
+        // Show error state
+        function showError(message) {
+            document.getElementById('balance').textContent = 'Error';
+            document.getElementById('transactions').innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <div class="text-2xl mb-2">⚠️</div>
+                    ${message}
+                </div>
+            `;
+            document.getElementById('paymentRequests').innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <div class="text-2xl mb-2">⚠️</div>
+                    ${message}
+                </div>
+            `;
+            document.getElementById('lastUpdated').textContent = 'Error';
+        }
+
+        // Update UI with current wallet data
+        function updateUI() {
+            if (!walletData) return;
+
+            // Update balance
+            document.getElementById('balance').textContent = `$${walletData.balance.toFixed(2)}`;
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+            document.getElementById('currentUserId').textContent = currentUserId;
+
+            // Update transactions
+            const transactionsContainer = document.getElementById('transactions');
+            if (walletData.transactions && walletData.transactions.length > 0) {
+                transactionsContainer.innerHTML = walletData.transactions.map(tx => `
+                    <div class="flex justify-between items-center p-4 border-b hover:bg-gray-50 fade-in">
+                        <div>
+                            <div class="font-medium">${tx.type}</div>
+                            <div class="text-sm text-gray-500">${new Date(tx.date).toLocaleString()}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="${tx.amount > 0 ? 'text-green-600' : 'text-red-600'} font-medium">
+                                ${tx.amount > 0 ? '+' : ''}$${Math.abs(tx.amount).toFixed(2)}
+                            </div>
+                            <div class="text-xs ${tx.status === 'Completed' ? 'text-green-500' : 'text-yellow-500'}">
+                                ${tx.status}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                transactionsContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        No transactions found
+                    </div>
+                `;
+            }
+
+            // Update payment requests
+            const paymentRequestsContainer = document.getElementById('paymentRequests');
+            if (walletData.paymentRequests && walletData.paymentRequests.length > 0) {
+                paymentRequestsContainer.innerHTML = walletData.paymentRequests.map(pr => `
+                    <div class="flex justify-between items-center p-4 border-b hover:bg-gray-50 fade-in">
+                        <div>
+                            <div class="font-medium">Payment Request</div>
+                            <div class="text-sm text-gray-500">To: ${pr.recipientId}</div>
+                            <div class="text-sm text-gray-500">${pr.description || 'No description'}</div>
+                            <div class="text-xs text-gray-400">${new Date(pr.createdAt).toLocaleString()}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-medium text-blue-600">$${pr.amount.toFixed(2)}</div>
+                            <div class="text-xs ${pr.status === 'Completed' ? 'text-green-500' : pr.status === 'Pending' ? 'text-yellow-500' : 'text-red-500'}">
+                                ${pr.status}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                paymentRequestsContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        No payment requests found
+                    </div>
+                `;
+            }
+        }
+
+        // Modal functions
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            // Reset form fields
+            if (id === 'addMoneyModal') {
+                document.getElementById('addAmount').value = '';
+                selectedPaymentMethod = null;
+                document.querySelectorAll('.payment-method').forEach(el => {
+                    el.classList.remove('border-blue-500', 'bg-blue-50');
+                });
+            }
+        }
+
+        // Payment method selection
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('border-blue-500', 'bg-blue-50');
+            });
+            event.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        // Add money to wallet (simulation)
+        async function addMoney() {
+            const amount = parseFloat(document.getElementById('addAmount').value);
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            try {
+                // Simulate API call - in real app, call your API here
+                alert(`Successfully added $${amount.toFixed(2)} to your wallet!`);
+                closeModal('addMoneyModal');
+
+                // Refresh data to show updated balance
+                await refreshData();
+            } catch (error) {
+                console.error('Error adding money:', error);
+                alert('Failed to add money. Please try again.');
+            }
+        }
+
+        // Send money (simulation)
+        async function sendMoney() {
+            const recipient = document.getElementById('recipient').value;
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            const description = document.getElementById('description').value;
+
+            if (!recipient) {
+                alert('Please enter a recipient');
+                return;
+            }
             if (!amount || amount <= 0) {
                 alert('Please enter a valid amount');
                 return;
             }
 
-            currentPaymentId = 'PAY-' + Date.now();
-
-            const qrData = {
-                paymentId: currentPaymentId,
-                amount: amount,
-                merchantId: 'MERCHANT-123',
-                timestamp: new Date().toISOString()
-            };
-
             try {
-                const response = await fetch('@Url.Action("GenerateQR", "Wallet")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
-                    },
-                    body: JSON.stringify(qrData)
-                });
+                // Simulate API call
+                alert(`Payment request sent to ${recipient} for $${amount.toFixed(2)}`);
+                closeModal('sendMoneyModal');
 
-                if (!response.ok) {
-                    throw new Error('QR generation failed');
-                }
-
-                const result = await response.json();
-
-                document.getElementById('qrContainer').style.display = 'block';
-                document.getElementById('qrInfo').style.display = 'block';
-                document.getElementById('qrCode').innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="font-size: 12px; margin-bottom: 10px;">QR Code Generated</div>
-                        <div style="background: #000; width: 150px; height: 150px; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">
-                            ${result.paymentId}
-                        </div>
-                    </div>
-                `;
-
-                document.getElementById('paymentId').textContent = result.paymentId;
-                document.getElementById('qrAmount').textContent = result.amount.toFixed(2);
-                document.getElementById('paymentStatus').textContent = 'Pending';
-                document.getElementById('paymentStatus').style.color = '#f39c12';
+                // Refresh data
+                await refreshData();
             } catch (error) {
-                console.error('Error generating QR code:', error);
-                alert('Failed to generate QR code. Please try again.');
+                console.error('Error sending money:', error);
+                alert('Failed to send money. Please try again.');
             }
         }
 
-        // Check payment status
-        async function checkPaymentStatus() {
-            if (!currentPaymentId) {
-                alert('No active payment to check');
-                return;
-            }
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWalletData(currentUserId);
 
-            try {
-                const response = await fetch(`@Url.Action("CheckPaymentStatus", "Wallet")?paymentId=${encodeURIComponent(currentPaymentId)}`);
-                if (!response.ok) {
-                    throw new Error('Failed to check payment status');
-                }
-
-                const result = await response.json();
-
-                const statusElement = document.getElementById('paymentStatus');
-                if (result.status === 'Completed') {
-                    statusElement.textContent = 'Completed ✅';
-                    statusElement.style.color = '#27ae60';
-                    updateBalance(result.amount);
-                    loadTransactions();
-                } else if (result.status === 'Failed') {
-                    statusElement.textContent = 'Failed ❌';
-                    statusElement.style.color = '#e74c3c';
-                } else {
-                    statusElement.textContent = 'Pending ⏳';
-                    statusElement.style.color = '#f39c12';
-                }
-            } catch (error) {
-                console.error('Error checking payment status:', error);
-                alert('Failed to check payment status. Please try again.');
-            }
-        }
-
-        // Add money to wallet
-        async function addMoney() {
-            const amount = parseFloat(document.getElementById('addAmount').value);
-
-            if (!amount || amount <= 0) {
-                showStatus('addMoneyStatus', 'Please enter a valid amount', 'error');
-                return;
-            }
-
-            if (!selectedPaymentMethod) {
-                showStatus('addMoneyStatus', 'Please select a payment method', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('@Url.Action("AddMoney", "Wallet")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
-                    },
-                    body: JSON.stringify({
-                        amount: amount,
-                        paymentMethod: selectedPaymentMethod
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Add money failed');
-                }
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showStatus('addMoneyStatus', `Successfully added $${amount.toFixed(2)} to your wallet!`, 'success');
-                    updateBalance(amount);
-                    loadTransactions();
-                    setTimeout(() => closeModal('addMoneyModal'), 2000);
-                } else {
-                    showStatus('addMoneyStatus', result.message || 'Failed to add money.', 'error');
-                }
-            } catch (error) {
-                console.error('Error adding money:', error);
-                showStatus('addMoneyStatus', 'Network error. Please try again.', 'error');
-            }
-        }
-
-        // Make payment
-        async function makePayment() {
-            const recipient = document.getElementById('recipientId').value.trim();
-            const amount = parseFloat(document.getElementById('paymentAmountModal').value);
-            const description = document.getElementById('paymentDescription').value.trim();
-
-            if (!recipient || !amount || amount <= 0) {
-                showStatus('paymentStatus', 'Please fill in all required fields', 'error');
-                return;
-            }
-
-            if (amount > currentBalance) {
-                showStatus('paymentStatus', 'Insufficient balance', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch('@Url.Action("MakePayment", "Wallet")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
-                    },
-                    body: JSON.stringify({
-                        recipientId: recipient,
-                        amount: amount,
-                        description: description
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Payment failed');
-                }
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showStatus('paymentStatus', `Payment of $${amount.toFixed(2)} sent successfully!`, 'success');
-                    updateBalance(-amount);
-                    loadTransactions();
-                    setTimeout(() => closeModal('paymentModal'), 2000);
-                } else {
-                    showStatus('paymentStatus', result.message || 'Payment failed.', 'error');
-                }
-            } catch (error) {
-                console.error('Error making payment:', error);
-                showStatus('paymentStatus', 'Network error. Please try again.', 'error');
-            }
-        }
-
-        // Utility functions
-        function showStatus(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = `status-message ${type}`;
-            element.style.display = 'block';
-
-            setTimeout(() => {
-                element.style.display = 'none';
-            }, 5000);
-        }
-
-        function updateBalance(change) {
-            currentBalance += change;
-            document.getElementById('walletBalance').textContent = `$${currentBalance.toFixed(2)}`;
-        }
-
-        // Close modal when clicking outside
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
+            // Close modal when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('fixed')) {
+                    const modalId = e.target.id;
+                    if (modalId.includes('Modal')) {
+                        closeModal(modalId);
+                    }
                 }
             });
-        });
-
-        // Load transactions on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            loadTransactions();
-
-            // Add anti-forgery token to the page if not already present
-            if (document.getElementsByName('__RequestVerificationToken').length === 0) {
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '__RequestVerificationToken';
-                tokenInput.value = '@Html.AntiForgeryToken()';
-                document.body.appendChild(tokenInput);
-            }
         });
     </script>
 </body>

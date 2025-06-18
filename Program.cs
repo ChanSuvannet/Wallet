@@ -1,74 +1,89 @@
+using ElsSaleWallet.Services;
 using Microsoft.EntityFrameworkCore;
 using RazorWithSQLiteApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// -----------------------------------------------------------------------------
-// Configure services
-// -----------------------------------------------------------------------------
+// =====================================
+// Configuration & Services
+// =====================================
+var config = builder.Configuration;
 
-// Use SQLite and bind connection string from appsettings.json
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseSqlite(config.GetConnectionString("DefaultConnection"));
+    options.EnableDetailedErrors();
+    options.EnableSensitiveDataLogging();
+});
 
-// Add MVC support
-builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IWalletService, WalletService>();
 
-// Swagger (for API testing/documentation)
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(opt =>
+        opt.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve);
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "ElsSaleWallet API",
+        Version = "v1",
+        Description = "Digital Wallet Management System API"
+    });
+});
 
 var app = builder.Build();
 
-// -----------------------------------------------------------------------------
-// Configure middleware pipeline
-// -----------------------------------------------------------------------------
-
+// =====================================
+// Middleware Pipeline
+// =====================================
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-
-    // Swagger available only in development
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ElsSaleWallet API v1");
-        c.RoutePrefix = "swagger";
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ElsSaleWallet v1");
+        c.DisplayRequestDuration();
+        c.EnableTryItOutByDefault();
     });
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts(); // Enable HSTS in production
+    app.UseExceptionHandler("/error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();     // Serve CSS/JS/images from wwwroot
-app.UseRouting();
-// app.UseAuthorization(); // Enable only if you use authentication
-
-// -----------------------------------------------------------------------------
-// Routes
-// -----------------------------------------------------------------------------
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Wallet}/{action=Index}/{id?}");
-
-app.MapControllers(); // For API endpoints
-
-// -----------------------------------------------------------------------------
-// Database Initialization (Ensure created)
-// -----------------------------------------------------------------------------
-
-using (var scope = app.Services.CreateScope())
+app.UseStaticFiles(new StaticFileOptions
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.EnsureCreated(); // Create the SQLite DB if not exists
+    OnPrepareResponse = ctx =>
+    {
+        if (app.Environment.IsProduction())
+            ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=31536000");
+    }
+});
+
+app.UseRouting();
+// app.UseAuthentication();
+// app.UseAuthorization();
+
+app.MapControllers();
+app.MapControllerRoute("default", "{controller=Wallet}/{action=Index}/{id?}");
+app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
+
+await InitializeDatabaseAsync(app);
+await app.RunAsync();
+
+// =====================================
+// DB Initialization
+// =====================================
+static async Task InitializeDatabaseAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (context.Database.IsSqlite())
+        await context.Database.MigrateAsync();
 }
-
-// -----------------------------------------------------------------------------
-// Run the app
-// -----------------------------------------------------------------------------
-
-app.Run();

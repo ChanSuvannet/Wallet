@@ -1,123 +1,81 @@
 using Wallet.Models;
 using Microsoft.AspNetCore.Mvc;
-
+using ElsSaleWallet.Services;
+using System.Threading.Tasks;
+using DTOs = Wallet.DTOs;
+using Models = Wallet.Models;
 namespace ElsSaleWallet.Controllers
 {
+    [Route("[controller]")]
+    [ApiController]
     public class WalletController : Controller
     {
-        private static decimal _currentBalance = 1234.56m; // Simulated balance
-        private static List<Transaction> _transactions = new List<Transaction>
-        {
-            new Transaction { Type = "Payment Received", Date = DateTime.Now, Amount = 125.00m, Status = "Completed" },
-            new Transaction { Type = "Product Purchase", Date = DateTime.Now.AddDays(-1), Amount = -89.99m, Status = "Completed" },
-            new Transaction { Type = "Wallet Top-up", Date = DateTime.Now.AddDays(-2), Amount = 500.00m, Status = "Completed" },
-            new Transaction { Type = "Refund", Date = DateTime.Now.AddDays(-3), Amount = 45.50m, Status = "Completed" }
-        };
+        private readonly IWalletService _walletService;
 
-        // MVC Action for Wallet View
-        [HttpGet]
-        public IActionResult Index()
+        public WalletController(IWalletService walletService)
         {
-            var model = new WalletBalance { Balance = _currentBalance };
-            return View(model);
+            _walletService = walletService;
         }
 
-        // API: Get Wallet Balance
-        [HttpGet]
-        [Route("api/wallet/balance")]
-        public IActionResult GetBalance()
+        // GET: /wallet/page
+        [HttpGet("page/{userId}")]
+        public IActionResult Index(int userId)
         {
-            return Ok(new { Balance = _currentBalance });
+            ViewBag.UserId = userId;
+            return View(new WalletBalance());
         }
 
-        // API: Get Transactions
-        [HttpGet]
-        [Route("api/wallet/transactions")]
-        public IActionResult GetTransactions()
+        // GET: /wallet/wallet/{userId}
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetWalletData(int userId)
         {
-            return Ok(_transactions);
-        }
-
-        // API: Generate QR Code
-        [HttpPost]
-        [Route("api/wallet/generate-qr")]
-        public IActionResult GenerateQrCode([FromBody] QrCodeRequest qrData)
-        {
-            // Simulate QR code generation (in real app, use a QR code library)
-            return Ok(new
+            try
             {
-                Success = true,
-                QrCode = $"QR_{qrData.PaymentId}",
-                PaymentId = qrData.PaymentId,
-                Amount = qrData.Amount,
-                Status = "Pending"
-            });
-        }
-
-        // API: Check Payment Status
-        [HttpGet]
-        [Route("api/wallet/payment-status/{paymentId}")]
-        public IActionResult CheckPaymentStatus(string paymentId)
-        {
-            // Simulate payment status check
-            var random = new Random();
-            var status = random.Next(0, 3) switch
-            {
-                0 => "Pending",
-                1 => "Completed",
-                _ => "Failed"
-            };
-
-            return Ok(new { Status = status, PaymentId = paymentId });
-        }
-
-        // API: Add Money
-        [HttpPost]
-        [Route("api/wallet/add-money")]
-        public IActionResult AddMoney([FromBody] AddMoneyRequest request)
-        {
-            if (request.Amount <= 0 || string.IsNullOrEmpty(request.PaymentMethod))
-            {
-                return BadRequest(new { Success = false, Message = "Invalid amount or payment method" });
+                var wallet = await _walletService.GetFullWalletDataAsync(userId);
+                return Ok(wallet);
             }
-
-            _currentBalance += request.Amount;
-            _transactions.Add(new Transaction
+            catch (KeyNotFoundException)
             {
-                Type = "Wallet Top-up",
-                Date = DateTime.Now,
-                Amount = request.Amount,
-                Status = "Completed"
-            });
-
-            return Ok(new { Success = true, NewBalance = _currentBalance });
+                return NotFound();
+            }
         }
 
-        // API: Make Payment
-        [HttpPost]
-        [Route("api/wallet/make-payment")]
-        public IActionResult MakePayment([FromBody] PaymentRequest request)
+        // POST: /api/walletapi/add-money
+        [HttpPost("add-money")]
+        public async Task<IActionResult> AddMoney([FromBody] DTOs.AddMoneyRequest request)
         {
-            if (request.Amount <= 0 || string.IsNullOrEmpty(request.RecipientId))
+            try
             {
-                return BadRequest(new { Success = false, Message = "Invalid recipient or amount" });
+                // Implement your add money logic here
+                return Ok(new { Message = "Money added successfully" });
             }
-
-            if (request.Amount > _currentBalance)
+            catch (Exception ex)
             {
-                return BadRequest(new { Success = false, Message = "Insufficient balance" });
+                return BadRequest(new DTOs.ErrorResponse // Now this works
+                {
+                    Message = "Failed to add money",
+                    Details = ex.Message
+                });
             }
+        }
 
-            _currentBalance -= request.Amount;
-            _transactions.Add(new Transaction
+        // POST: /api/walletapi/send-money
+        [HttpPost("send-money")]
+        public async Task<IActionResult> SendMoney([FromBody] DTOs.SendMoneyRequest request)
+        {
+            try
             {
-                Type = "Payment Sent",
-                Date = DateTime.Now,
-                Amount = -request.Amount,
-                Status = "Completed"
-            });
-
-            return Ok(new { Success = true, NewBalance = _currentBalance });
+                // Implement your send money logic here
+                return Ok(new { Message = "Payment request created successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new DTOs.ErrorResponse
+                {
+                    Message = "Failed to send money",
+                    Details = ex.Message
+                });
+            }
         }
     }
 }
