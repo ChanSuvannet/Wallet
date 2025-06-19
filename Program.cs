@@ -19,8 +19,13 @@ var apiGatewayUrl = config["API_GATEWAY_URL"] ?? "http://localhost:3001";
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlite(config.GetConnectionString("DefaultConnection"));
-    options.EnableDetailedErrors();
-    options.EnableSensitiveDataLogging(); // Optional: remove in production
+    
+    // Enable detailed errors and sensitive data logging only in development
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
 });
 
 // ✅ Add support for both APIs and Razor Views
@@ -90,6 +95,14 @@ app.UseCors("AllowFrontend");
 
 app.MapControllers();
 app.MapDefaultControllerRoute(); // 👈 Needed for Razor View (MVC-style) controllers like WalletController.Index()
+
+// Add a root route that redirects to your main page
+app.MapGet("/", () => Results.Redirect("/swagger"));
+app.MapGet("/home", () => Results.Ok(new { 
+    Message = "Welcome to ElsSaleWallet API", 
+    Version = "1.0.0",
+    Endpoints = new[] { "/swagger", "/health", "/api/wallet" }
+}));
 
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
