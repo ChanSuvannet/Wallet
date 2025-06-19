@@ -43,28 +43,33 @@ namespace ElsSaleWallet.Services
             }
         }
 
-        public async Task<WalletBalance> CreateWalletAsync(int userId)
+        public async Task<WalletBalance> CreateWalletAsync(Wallet.DTOs.CreateWalletRequest request)
         {
-            if (await _context.Wallets.AnyAsync(w => w.UserId == userId))
+            if (await _context.Wallets.AnyAsync(w => w.UserId == request.UserId))
             {
                 throw new InvalidOperationException("Wallet already exists for user");
             }
 
             var wallet = new WalletBalance
             {
-                UserId = userId,
-                Name = "Unknown", // Populate from user data if available
-                Email = "unknown@example.com", // Populate from user data
-                Balance = 0m,
-                Transactions = new List<Transaction>(),
-                PaymentRequests = new List<PaymentRequest>()
+                UserId = request.UserId,
+                Name = request.Name ?? "Unknown",
+                Email = request.Email ?? "unknown@example.com",
+                Balance = request.InitialBalance
             };
 
             _context.Wallets.Add(wallet);
             await _context.SaveChangesAsync();
 
-            return wallet;
+            var fullWallet = await _context.Wallets
+                .Include(w => w.Transactions)
+                .Include(w => w.PaymentRequests)
+                .FirstOrDefaultAsync(w => w.Id == wallet.Id);
+
+            return fullWallet!;
         }
+
+
 
         public async Task<WalletBalance> AddMoneyAsync(int userId, decimal amount)
         {
