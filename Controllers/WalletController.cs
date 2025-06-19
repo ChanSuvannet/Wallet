@@ -59,11 +59,12 @@ namespace ElsSaleWallet.Controllers
 
         // POST: /wallet/create/{userId}
         [HttpPost("create/{userId}")]
-        public async Task<IActionResult> CreateWallet([Required] int userId)
+        public async Task<IActionResult> CreateWallet([FromRoute] int userId, [FromBody] DTOs.CreateWalletRequest request)
         {
             try
             {
-                var wallet = await _walletService.CreateWalletAsync(userId);
+                request.UserId = userId; // Override userId from route to ensure consistency
+                var wallet = await _walletService.CreateWalletAsync(request);
                 return Ok(wallet);
             }
             catch (InvalidOperationException ex)
