@@ -15,7 +15,7 @@ obj/
 .idea/
 
 ## ASP.NET & Entity Framework
-*.db
+.db
 *.db-journal
 *.sqlite
 *.sqlite3
