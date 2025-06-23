@@ -1,35 +1,36 @@
+# ======================
 # Build Stage
+# ======================
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project files and restore (cache dependencies)
+# Copy and restore project dependencies
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy remaining files and publish
+# Copy everything else and build
 COPY . ./
-RUN dotnet publish Wallet.csproj -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish
 
+# ======================
 # Runtime Stage
+# ======================
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
-# Create data directory and set permissions before switching users
+# Create persistent data directory for SQLite
 RUN mkdir -p /app/data
 
-# Copy published output from build stage
+# Copy the published output
 COPY --from=build /app/publish ./
 
-# Create non-root user and set ownership (if not exists)
-RUN groupadd -r app 2>/dev/null || true
-RUN useradd -r -g app app 2>/dev/null || true
+# Set permissions (if running as non-root)
+RUN groupadd -r app || true && useradd -r -g app app || true
 RUN chown -R app:app /app
-
-# Switch to non-root user
 USER app
 
-# Expose port 80
+# Expose HTTP port
 EXPOSE 80
 
-# Set the entrypoint
+# Start the app
 ENTRYPOINT ["dotnet", "Wallet.dll"]

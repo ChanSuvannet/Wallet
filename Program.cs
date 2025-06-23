@@ -6,21 +6,15 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
-// =====================================
-// Environment-based settings
-// =====================================
+// Environment URLs
 var frontendUrl = config["FRONTEND_URL"] ?? "http://localhost:3000";
 var walletFrontendUrl = config["WALLET_FRONTEND_URL"] ?? "http://localhost:5253";
 var apiGatewayUrl = config["API_GATEWAY_URL"] ?? "http://localhost:3001";
 
-// =====================================
-// Add services to the container
-// =====================================
+// Configure EF Core with SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlite(config.GetConnectionString("DefaultConnection"));
-    
-    // Enable detailed errors and sensitive data logging only in development
     if (builder.Environment.IsDevelopment())
     {
         options.EnableDetailedErrors();
@@ -28,27 +22,27 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
 });
 
-// ✅ Add support for both APIs and Razor Views
-builder.Services.AddControllersWithViews()
-    .AddJsonOptions(opt =>
-    {
-        opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-        opt.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    });
+// Razor + API Controllers
+builder.Services.AddControllersWithViews().AddJsonOptions(opt =>
+{
+    opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    opt.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
 
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy
-            .WithOrigins(frontendUrl, walletFrontendUrl, apiGatewayUrl)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
+        policy.WithOrigins(frontendUrl, walletFrontendUrl, apiGatewayUrl)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials());
 });
 
-// Dependency Injection
+// DI
 builder.Services.AddScoped<IWalletService, WalletService>();
 
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -62,9 +56,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// =====================================
-// Middleware Pipeline
-// =====================================
+// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -82,46 +74,50 @@ else
     app.UseHsts();
 }
 
-// Optional for production:
-// app.UseHttpsRedirection();
-
+// app.UseHttpsRedirection(); // Optional
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("AllowFrontend");
-
-// Uncomment if you add auth:
 // app.UseAuthentication();
 // app.UseAuthorization();
 
 app.MapControllers();
-app.MapDefaultControllerRoute(); // 👈 Needed for Razor View (MVC-style) controllers like WalletController.Index()
+app.MapDefaultControllerRoute();
 
-// Add a root route that redirects to your main page
 app.MapGet("/", () => Results.Redirect("/swagger"));
-app.MapGet("/home", () => Results.Ok(new { 
-    Message = "Welcome to ElsSaleWallet API", 
+app.MapGet("/home", () => Results.Ok(new
+{
+    Message = "Welcome to ElsSaleWallet API",
     Version = "1.0.0",
     Endpoints = new[] { "/swagger", "/health", "/api/wallet" }
 }));
-
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
 
 await InitializeDatabaseAsync(app);
-
 await app.RunAsync();
 
-// =====================================
+// ===========================
 // DB Initialization
-// =====================================
+// ===========================
 static async Task InitializeDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
     try
     {
         if (context.Database.IsSqlite())
         {
-            await context.Database.MigrateAsync();
+            var pending = await context.Database.GetPendingMigrationsAsync();
+            if (pending.Any())
+            {
+                Console.WriteLine("Applying pending migrations...");
+                await context.Database.MigrateAsync();
+            }
+            else
+            {
+                Console.WriteLine("No pending migrations.");
+            }
         }
     }
     catch (Exception ex)
