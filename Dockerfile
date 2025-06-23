@@ -1,51 +1,52 @@
-# ======================
+# ============================================
 # Build Stage
-# ======================
+# ============================================
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project file and restore dependencies
+# Copy project files and restore dependencies
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy all files and publish
+# Copy remaining files and publish
 COPY . ./
-RUN dotnet publish Wallet.csproj -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish
 
-# ======================
+# ============================================
 # Runtime Stage
-# ======================
+# ============================================
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
-# (Optional) Install sqlite3 CLI for debugging inside container
-RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
+# ✅ Install sqlite3 CLI tool for DB inspection (optional but useful)
+RUN apt-get update && \
+  apt-get install -y sqlite3 curl && \
+  rm -rf /var/lib/apt/lists/*
 
-# ✅ Add group and user only if they don't exist
-RUN getent group app || groupadd -r app
-RUN id -u app || useradd -r -g app app
+# ✅ Create a non-root app user
+RUN groupadd -r app || true && useradd -r -g app app || true
 
-# Create data directory and fix permissions
+# ✅ Create data folder for SQLite DB and apply permissions
 RUN mkdir -p /app/data && \
-    chown -R app:app /app && \
-    chmod -R 755 /app && \
-    chmod -R 777 /app/data
+  chown -R app:app /app && \
+  chmod -R 755 /app && \
+  chmod -R 777 /app/data
 
-# Copy build output
+# ✅ Copy published build output
 COPY --from=build /app/publish ./
 
-# Ensure ownership
+# ✅ Fix file ownership (optional but safe)
 RUN chown -R app:app /app
 
-# Switch to non-root user
+# ✅ Switch to non-root user
 USER app
 
-# Expose port
+# ✅ Expose HTTP port
 EXPOSE 80
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# ✅ Add healthcheck endpoint for Docker Compose
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/health || exit 1
 
-# Start the app
+# ✅ Start the app
 ENTRYPOINT ["dotnet", "Wallet.dll"]

@@ -11,8 +11,8 @@ using RazorWithSQLiteApp.Data;
 namespace Wallet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250623025928_InitWalletSchema")]
-    partial class InitWalletSchema
+    [Migration("20250623030551_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
