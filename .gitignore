@@ -16,12 +16,12 @@ obj/
 
 ## ASP.NET & Entity Framework
 .db
-*.db-journal
-*.sqlite
-*.sqlite3
+# *.db-journal
+# *.sqlite
+# *.sqlite3
 
 ## SQLite migrations (if applicable)
-Migrations/
+# Migrations/
 
 ## Logs
 *.log
