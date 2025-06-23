@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
 // Environment URLs
-var frontendUrl = config["FRONTEND_URL"] ?? "http://localhost:3000";
+var frontendUrl = config["FRONTEND_URL"] ?? "https://ele-sale.shop";
 var walletFrontendUrl = config["WALLET_FRONTEND_URL"] ?? "http://localhost:5253";
 var apiGatewayUrl = config["API_GATEWAY_URL"] ?? "http://localhost:3001";
 
